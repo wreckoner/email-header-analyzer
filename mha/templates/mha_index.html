@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+
+{% load static %}
+{% load mha_tags %}
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+
+
+    <title>Mail Header Analyzer (MHA)</title>
+</head>
+
+<body>
+    {% include 'navbar.html' %}
+    <div class="container-fluid" style="padding-top: 75px;">
+
+        {% if headers %}
+
+        {% load static %}
+        {% load mha_tags %}
+        <div class="jumbotron">
+            <div class="row">
+                <div class="col">
+                    <table class="table">
+                        <tbody>
+                            {% for k,v in major_headers.items %}
+                            <tr>
+                                <th>{{ k }}</th>
+                                <td>{{ v }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if delayed %}
+                <div class="col">
+                    {# <div id="chart_div"></div>#}
+                    {{ chart|safe }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <table id="hops-table" class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Hop</th>
+                    <th scope="col">From</th>
+                    <th scope="col">By</th>
+                    <th scope="col">With</th>
+                    <th scope="col">Time (UTC)</th>
+                    <th scope="col">Delay</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k, v in hops %}
+                <tr>
+                    <td scope="col">{{ k }}</td>
+                    <td scope="col">
+                        {{ v.Direction.0 }}
+                        {% if v.Direction.0|country_iso_code %}
+                        <span class="float-right">
+                            <a href="#" data-toggle="tooltip" data-placement="top"
+                                title="{{v.Direction.0|country_name}}">
+                                <i class="flag flag-{{v.Direction.0|country_iso_code}}"></i>
+                            </a>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td scope="col">
+                        {{ v.Direction.1 }}
+                        {% if v.Direction.1|country_iso_code %}
+                        <span class="float-right">
+                            <a href="#" data-toggle="tooltip" data-placement="top"
+                                title="{{v.Direction.1|country_name}}">
+                                <i class="flag flag-{{v.Direction.1|country_iso_code}}"></i>
+                            </a>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td scope="col">{{ v.Direction.2 }}</td>
+                    <td scope="col">{{ v.Time }}</td>
+                    <td scope="col">
+                        {% if v.Delay|duration %} {{ v.Delay|duration }} {% else %} {% if loop.first %} *
+                        {% else %}0{% endif %} {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="security-headers-card" class="card mt-5">
+            <h5 class="card-header">Security Headers</h5>
+            <div class="card-body p-0">
+                {% if security_headers %}
+                <table class="table table-bordered m-0">
+                    {% for k,v in security_headers.items%}
+                    <tr>
+                        <th>{{ k }}</th>
+                        <td>{{ v }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+                {% else %}
+
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="x-headers-card" class="card mt-5">
+            <h5 class="card-header">X- headers</h5>
+            <div class="card-body p-0">
+                <table class="table table-bordered m-0">
+                    {% for k,v in x_headers.items %}
+                    <tr>
+                        <th>{{ k }}</th>
+                        <td>{{ v }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <div id="other-headers-card" class="card mt-5">
+            <h5 class="card-header">Other headers</h5>
+            <div class="card-body p-0">
+                <table class="table table-bordered m-0">
+                    {% for k,v in other_headers.items %}
+                    <tr>
+                        <th>{{ k }}</th>
+                        <td>{{ v }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea name='headers' class="form-control" rows="25" placeholder="Paste the header in here."
+                            autofocus required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg btn-block">Analyze This !</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+        crossorigin="anonymous"></script>
+    <script src="{% static 'mha/js/pygal-tooltips.min.js' %}"></script>
+    <!-- Flag sprites CSS -->
+    <link href="{% static 'mha/css/flag-sprites.min.css' %}" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+</body>
+
+</html>
